@@ -61074,17 +61074,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 45
-  rotateSpeed: 0
   characterController: {fileID: 1228098225}
   playerCamera: {fileID: 1908830500}
-  groundLayer: 0
+  rotationSpeed: 1.09
   verticalMin: 0
   verticalMax: 0
-  rotationSpeed: 0
-  jumpVelocity: 0
-  horizontalInput: 0
-  forwardInput: 0
-  offset: {x: 0, y: 0, z: 0}
+  BrakeOff: {fileID: 0}
+  BrakeOn: {fileID: 0}
 --- !u!64 &1228098224
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -63318,7 +63314,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1228098220}
   playerCamera: {fileID: 1163829923}
-  offset: {x: 0, y: 5, z: -10}
+  offset: {x: -0.63, y: 3.37, z: -0.9}
 --- !u!28 &1914662865
 Texture2D:
   m_ObjectHideFlags: 0
