@@ -4,32 +4,34 @@ using UnityEngine;
 
 public class NewPlayerController : MonoBehaviour
 {
-    //Movement Stuff
+    // Movement Stuff
     [SerializeField] private CharacterController characterController;
-    public GameObject player;
-    public Transform playerTran; 
     public Vector3 offset;
     public Quaternion offsetRotation;
     [SerializeField] private float speed;
     [SerializeField] private GameObject playerCamera;
+    [SerializeField] private GameObject driver;
 
-    //Rotation Stuff
+    // Rotation Stuff
     [SerializeField] private float rotS;
 
-    //Gas/Brake Stuff
+    // Moving Objects
     [SerializeField] private GameObject GasOff;
     [SerializeField] private GameObject GasOn;
     [SerializeField] private GameObject BrakeOff;
     [SerializeField] private GameObject BrakeOn;
-
+    [SerializeField] private GameObject SteeringWheel;
+    private float steeringWheelRotation;
 
     private float moveF;
-    private float mouseMove;
+    private float RotAS;
 
     private void Start()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        float horizontalInput = Input.GetAxis("Horizontal");
+        SteeringWheel.transform.rotation = Quaternion.Euler(-horizontalInput, horizontalInput, horizontalInput);
     }
 
     private void Update()
@@ -39,19 +41,26 @@ public class NewPlayerController : MonoBehaviour
         ReverseCameraRotation();
     }
 
-     void LateUpdate()
-    { 
-       CameraStuff();
-      
+    private void LateUpdate()
+    {
+        CameraStuff();
+       
     }
 
     private void Rotate()
 {
+    float moveInput = Input.GetAxis("Vertical");
     float horizontalInput = Input.GetAxis("Horizontal");
-    if (horizontalInput != 0) // fix rotating while still
+
+    if (moveInput != 0) // Check if there's any vertical input
     {
-        mouseMove += horizontalInput * rotS;
-        transform.rotation = Quaternion.Euler(0, mouseMove, 0);
+        RotAS += horizontalInput * rotS;
+        transform.rotation = Quaternion.Euler(0, RotAS, 0);
+        
+        // Adjust the rotation of the steering wheel based on the direction of input
+        steeringWheelRotation += horizontalInput * rotS;
+        steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
+        SteeringWheel.transform.rotation = Quaternion.Euler(0, 0, steeringWheelRotation);
     }
 }
 
@@ -61,56 +70,51 @@ public class NewPlayerController : MonoBehaviour
         float moveInput = Input.GetAxis("Vertical");
         if (moveInput < 0)
         {
-            mouseMove += Input.GetAxis("Mouse X") * rotS;
-            transform.rotation = Quaternion.Euler(0, mouseMove, 0);
+            RotAS += Input.GetAxis("Mouse X") * rotS;
+            transform.rotation = Quaternion.Euler(0, RotAS, 0);
         }
     }
 
     private void CameraStuff()
-{
-    float moveInput = Input.GetAxis("Vertical");
-    if (moveInput < 0) // Player is moving backward
     {
-        offsetRotation = Quaternion.Euler(0, 270f, 0f);
-    }
-    else
-    {
-        offsetRotation = Quaternion.Euler(0, 90, 0); // Reset rotation when not moving backward
-    }
+        float moveInput = Input.GetAxis("Vertical");
+        if (moveInput < 0) // Player is moving backward
+        {
+            offsetRotation = Quaternion.Euler(0, 270f, 0f);
+        }
+        else
+        {
+            offsetRotation = Quaternion.Euler(0, 90, 0); // Reset rotation when not moving backward
+        }
 
-    transform.position = playerTran.transform.position + playerTran.rotation * offset;
-    transform.rotation = playerTran.rotation * offsetRotation;
-}
-
+        playerCamera.transform.position = driver.transform.position + offset;
+    }
 
     private void Move()
-{
-    float x = 0;
-    float y = playerCamera.transform.eulerAngles.y;
-    float z = Input.GetAxis("Vertical");
-    float input = Mathf.Sqrt(Mathf.Pow(x, 2) + Mathf.Pow(z, 2));
-
-    if (Input.GetAxis("Vertical") < 0) // Player is moving backward
     {
-        z *= -1; // Invert z axis
-    }
+        float y = playerCamera.transform.eulerAngles.y;
+        float z = Input.GetAxis("Vertical");
 
-    Vector3 inputDirection = Quaternion.AngleAxis(y, Vector3.up) * new Vector3(x, 0, z);
-    Vector3 verticalSpeed = new Vector3(0, moveF, 0);
-    Vector3 playerMove = inputDirection + verticalSpeed;
+        if (Input.GetAxis("Vertical") < 0) // Player is moving backward
+        {
+            z *= -1; // Invert z axis
+        }
 
-    if (input > 0)
-    {
-        GasOn.SetActive(true);
-        GasOff.SetActive(false);
-    }
-    else
-    {
-        GasOn.SetActive(false);
-        GasOff.SetActive(true);
-    }
+        Vector3 inputDirection = Quaternion.AngleAxis(y, Vector3.up) * new Vector3(0, 0, z);
+        Vector3 playerMove = inputDirection;
 
-    characterController.Move(speed * Time.deltaTime * playerMove);
-}
+        if (z > 0)
+        {
+            GasOn.SetActive(true);
+            GasOff.SetActive(false);
+        }
+        else
+        {
+            GasOn.SetActive(false);
+            GasOff.SetActive(true);
+        }
+
+        characterController.Move(speed * Time.deltaTime * playerMove);
+    }
 
 }
