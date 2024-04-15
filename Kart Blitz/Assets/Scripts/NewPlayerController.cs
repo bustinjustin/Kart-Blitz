@@ -24,14 +24,13 @@ public class NewPlayerController : MonoBehaviour
     private float steeringWheelRotation;
 
     private float moveF;
-    private float RotAS;
+    private float RotAS = 90;
 
     private void Start()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         float horizontalInput = Input.GetAxis("Horizontal");
-        SteeringWheel.transform.rotation = Quaternion.Euler(-horizontalInput, horizontalInput, horizontalInput);
     }
 
     private void Update()
@@ -44,33 +43,37 @@ public class NewPlayerController : MonoBehaviour
     private void LateUpdate()
     {
         CameraStuff();
-       
     }
 
     private void Rotate()
-{
-    float moveInput = Input.GetAxis("Vertical");
-    float horizontalInput = Input.GetAxis("Horizontal");
-
-    if (moveInput != 0) // Check if there's any vertical input
     {
-        RotAS += horizontalInput * rotS;
-        transform.rotation = Quaternion.Euler(0, RotAS, 0);
-        
-        // Adjust the rotation of the steering wheel based on the direction of input
-        steeringWheelRotation += horizontalInput * rotS;
-        steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
-        SteeringWheel.transform.rotation = Quaternion.Euler(0, 0, steeringWheelRotation);
+        float moveInput = Input.GetAxis("Vertical");
+        float horizontalInput = Input.GetAxis("Horizontal");
+
+        if (moveInput > 0) // Check if there's any vertical input
+        {
+            RotAS += horizontalInput * rotS;
+            transform.rotation = Quaternion.Euler(0, RotAS, 0);
+            
+            // Adjust the rotation of the steering wheel based on the direction of input
+            steeringWheelRotation += horizontalInput * rotS;
+            steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
+            SteeringWheel.transform.localRotation = Quaternion.Euler(0, steeringWheelRotation, 0);
+
+            // wheel childed to parent.
+            // turn parent's local rotation when you steer.
+            // wheel rotates w/ local rotation. doesn't care what way parent is facing.
+        }
     }
-}
 
 
     private void ReverseCameraRotation()
     {
         float moveInput = Input.GetAxis("Vertical");
+
         if (moveInput < 0)
         {
-            RotAS += Input.GetAxis("Mouse X") * rotS;
+            RotAS += Input.GetAxis("Horizontal") * rotS;
             transform.rotation = Quaternion.Euler(0, RotAS, 0);
         }
     }
@@ -80,13 +83,16 @@ public class NewPlayerController : MonoBehaviour
         float moveInput = Input.GetAxis("Vertical");
         if (moveInput < 0) // Player is moving backward
         {
-            offsetRotation = Quaternion.Euler(0, 270f, 0f);
+            offsetRotation = Quaternion.Euler(0, 180, 0);
         }
         else
         {
-            offsetRotation = Quaternion.Euler(0, 90, 0); // Reset rotation when not moving backward
+            offsetRotation = Quaternion.Euler(0, 0, 0); // Reset rotation when not moving backward
         }
 
+        float driverYRotation = driver.transform.eulerAngles.y;
+
+        playerCamera.transform.rotation = Quaternion.Euler(0, driverYRotation + offsetRotation.eulerAngles.y, 0);
         playerCamera.transform.position = driver.transform.position + offset;
     }
 
@@ -100,8 +106,8 @@ public class NewPlayerController : MonoBehaviour
             z *= -1; // Invert z axis
         }
 
-        Vector3 inputDirection = Quaternion.AngleAxis(y, Vector3.up) * new Vector3(0, 0, z);
-        Vector3 playerMove = inputDirection;
+        Vector3 inputDirection = new Vector3(0, 0, z);
+        Vector3 playerMove = Quaternion.AngleAxis(y, Vector3.up) * inputDirection;
 
         if (z > 0)
         {
