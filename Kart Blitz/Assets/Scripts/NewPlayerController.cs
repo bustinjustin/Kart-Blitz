@@ -30,7 +30,6 @@ public class NewPlayerController : MonoBehaviour
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        float horizontalInput = Input.GetAxis("Horizontal");
     }
 
     private void Update()
@@ -70,11 +69,16 @@ public class NewPlayerController : MonoBehaviour
     private void ReverseCameraRotation()
     {
         float moveInput = Input.GetAxis("Vertical");
+        float horizontalInput = Input.GetAxis("Horizontal");
 
         if (moveInput < 0)
         {
-            RotAS += Input.GetAxis("Horizontal") * rotS;
+            RotAS += Input.GetAxis("Horizontal") * -rotS;
             transform.rotation = Quaternion.Euler(0, RotAS, 0);
+             // Adjust the rotation of the steering wheel based on the direction of input
+            steeringWheelRotation += horizontalInput * -rotS;
+            steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
+            SteeringWheel.transform.localRotation = Quaternion.Euler(0, steeringWheelRotation, 0);
         }
     }
 
