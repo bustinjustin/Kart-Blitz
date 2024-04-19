@@ -22,6 +22,8 @@ public class NewPlayerController : MonoBehaviour
     [SerializeField] private GameObject BrakeOn;
     [SerializeField] private GameObject SteeringWheel;
     private float steeringWheelRotation;
+        [SerializeField] private GameObject[] wheels; // Array to hold all wheels
+
 
     private float moveF;
     private float RotAS = 90;
@@ -37,6 +39,7 @@ public class NewPlayerController : MonoBehaviour
         Move();
         Rotate();
         ReverseCameraRotation();
+        RotateWheels();
     }
 
     private void LateUpdate()
@@ -66,6 +69,18 @@ public class NewPlayerController : MonoBehaviour
     }
 
 
+  private void ResetSW() // bugged needs fixing, when reset and the player rotates again it doesnt start at the 0. 
+{
+    float horizontalInput = Input.GetAxis("Horizontal");
+
+    if (horizontalInput == 0)
+    {
+        SteeringWheel.transform.localRotation = Quaternion.Euler(0, 0, 0);
+    }
+}
+
+
+
     private void ReverseCameraRotation()
     {
         float moveInput = Input.GetAxis("Vertical");
@@ -88,16 +103,19 @@ public class NewPlayerController : MonoBehaviour
         if (moveInput < 0) // Player is moving backward
         {
             offsetRotation = Quaternion.Euler(0, 180, 0);
+            offset = new Vector3(0.35f,4,1.5f);
         }
         else
         {
             offsetRotation = Quaternion.Euler(0, 0, 0); // Reset rotation when not moving backward
+            offset = new Vector3(0.35f,4,0);
+
         }
 
         float driverYRotation = driver.transform.eulerAngles.y;
 
-        playerCamera.transform.rotation = Quaternion.Euler(0, driverYRotation + offsetRotation.eulerAngles.y, 0);
-        playerCamera.transform.position = driver.transform.position + offset;
+        playerCamera.transform.position = driver.transform.position + driver.transform.rotation * offset;
+         playerCamera.transform.rotation = driver.transform.rotation * offsetRotation;
     }
 
     private void Move()
@@ -126,5 +144,24 @@ public class NewPlayerController : MonoBehaviour
 
         characterController.Move(speed * Time.deltaTime * playerMove);
     }
+    private void RotateWheels()
+        {
+            float moveInput = Input.GetAxis("Vertical");
 
-}
+            // Calculate rotation amount based on player's input
+            float rotationAmount = Input.GetAxis("Vertical") * Time.deltaTime * 100;
+
+            if (moveInput > 0) // Player is moving forward
+
+            // Rotate each wheel in the array
+            foreach (GameObject wheel in wheels)
+            {
+                wheel.transform.Rotate(Vector3.up * -rotationAmount);
+            }
+            else if (moveInput < 0)
+             foreach (GameObject wheel in wheels)
+            {
+                wheel.transform.Rotate(Vector3.down * rotationAmount);
+            }
+        }
+    }
