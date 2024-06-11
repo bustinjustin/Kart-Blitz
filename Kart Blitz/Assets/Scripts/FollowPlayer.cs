@@ -13,7 +13,7 @@ public Vector3 offset;
         
     }
 
-    void LateUpdate()
+    void Update()
     {
         transform.position = playerCamera.transform.position + playerCamera.rotation * offset;
         transform.rotation = playerCamera.rotation;

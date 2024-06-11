@@ -16,10 +16,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float verticalMax;
 
 
-    [SerializeField] private GameObject BrakeOff;
-    [SerializeField] private GameObject BrakeOn;
-
-
     private float velocityY;
     private float mouseX;
     private float mouseY;
