@@ -16,17 +16,20 @@ public class NewPlayerController : MonoBehaviour
     [SerializeField] private float rotS;
 
     // Moving Objects
-    [SerializeField] private GameObject GasOff;
-    [SerializeField] private GameObject GasOn;
-    [SerializeField] private GameObject BrakeOff;
-    [SerializeField] private GameObject BrakeOn;
+//    [SerializeField] private GameObject GasOff;
+  //  [SerializeField] private GameObject GasOn;
+ //   [SerializeField] private GameObject BrakeOff;
+ //   [SerializeField] private GameObject BrakeOn;
     [SerializeField] private GameObject SteeringWheel;
     private float steeringWheelRotation;
-        [SerializeField] private GameObject[] wheels; // Array to hold all wheels
-
+    [SerializeField] private GameObject[] wheels; // Array to hold all wheels
 
     private float moveF;
     private float RotAS = 90;
+    private float targetVelocity;
+    private Vector3 gravity;
+
+    private Vector3 carTilt;
 
     private void Start()
     {
@@ -38,8 +41,10 @@ public class NewPlayerController : MonoBehaviour
     {
         Move();
         Rotate();
-        ReverseCameraRotation();
+        // ReverseCameraRotation();
         RotateWheels();
+        // ResetSW();
+        // TiltCar();
     }
 
     private void LateUpdate()
@@ -52,49 +57,18 @@ public class NewPlayerController : MonoBehaviour
         float moveInput = Input.GetAxis("Vertical");
         float horizontalInput = Input.GetAxis("Horizontal");
 
-        if (moveInput > 0) // Check if there's any vertical input
-        {
-            RotAS += horizontalInput * rotS;
-            transform.rotation = Quaternion.Euler(0, RotAS, 0);
+        RotAS += horizontalInput * rotS;
+        transform.rotation = Quaternion.Euler(0, RotAS, 0);
+        
+        float steeringWheelTargetRotation = horizontalInput * 45;
+        steeringWheelRotation = Mathf.Lerp(steeringWheelRotation, steeringWheelTargetRotation, 3 * Time.deltaTime);
             
-            // Adjust the rotation of the steering wheel based on the direction of input
-            steeringWheelRotation += horizontalInput * rotS;
-            steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
-            SteeringWheel.transform.localRotation = Quaternion.Euler(0, steeringWheelRotation, 0);
+        SteeringWheel.transform.rotation = Quaternion.Euler(30, transform.eulerAngles.y, -steeringWheelRotation);
 
-            // wheel childed to parent.
-            // turn parent's local rotation when you steer.
-            // wheel rotates w/ local rotation. doesn't care what way parent is facing.
-        }
-    }
-
-
-  private void ResetSW() // bugged needs fixing, when reset and the player rotates again it doesnt start at the 0. 
-{
-    float horizontalInput = Input.GetAxis("Horizontal");
-
-    if (horizontalInput == 0)
-    {
-        SteeringWheel.transform.localRotation = Quaternion.Euler(0, 0, 0);
-    }
-}
-
-
-
-    private void ReverseCameraRotation()
-    {
-        float moveInput = Input.GetAxis("Vertical");
-        float horizontalInput = Input.GetAxis("Horizontal");
-
-        if (moveInput < 0)
-        {
-            RotAS += Input.GetAxis("Horizontal") * -rotS;
-            transform.rotation = Quaternion.Euler(0, RotAS, 0);
-             // Adjust the rotation of the steering wheel based on the direction of input
-            steeringWheelRotation += horizontalInput * -rotS;
-            steeringWheelRotation = Mathf.Clamp(steeringWheelRotation, -45, 45);
-            SteeringWheel.transform.localRotation = Quaternion.Euler(0, steeringWheelRotation, 0);
-        }
+        // wheel childed to parent.
+        // turn parent's local rotation when you steer.
+        // wheel rotates w/ local rotation. doesn't care what way parent is facing.
+        
     }
 
     private void CameraStuff()
@@ -103,65 +77,61 @@ public class NewPlayerController : MonoBehaviour
         if (moveInput < 0) // Player is moving backward
         {
             offsetRotation = Quaternion.Euler(0, 180, 0);
-            offset = new Vector3(0.35f,4,1.5f);
+            offset = new Vector3(0.45f,3,1.5f);
         }
         else
         {
             offsetRotation = Quaternion.Euler(0, 0, 0); // Reset rotation when not moving backward
-            offset = new Vector3(0.35f,4,0);
+            offset = new Vector3(0.45f,3,1.5f);
 
         }
 
-        float driverYRotation = driver.transform.eulerAngles.y;
+        Vector3 cameraPosition = driver.transform.position + driver.transform.rotation * offset;
+        Quaternion cameraRotation = driver.transform.rotation * offsetRotation;
 
-        playerCamera.transform.position = driver.transform.position + driver.transform.rotation * offset;
-         playerCamera.transform.rotation = driver.transform.rotation * offsetRotation;
+        playerCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
     }
 
     private void Move()
     {
-        float y = playerCamera.transform.eulerAngles.y;
+        float y = transform.eulerAngles.y;
         float z = Input.GetAxis("Vertical");
 
-        if (Input.GetAxis("Vertical") < 0) // Player is moving backward
-        {
-            z *= -1; // Invert z axis
-        }
+        targetVelocity = Mathf.Lerp(targetVelocity, z, 0.5f * Time.deltaTime);
 
-        Vector3 inputDirection = new Vector3(0, 0, z);
-        Vector3 playerMove = Quaternion.AngleAxis(y, Vector3.up) * inputDirection;
+        Vector3 inputDirection = new Vector3(0, 0, targetVelocity);
+        Vector3 playerMove = Quaternion.AngleAxis(y, Vector3.up) * inputDirection * speed;
 
-        if (z > 0)
-        {
-            GasOn.SetActive(true);
-            GasOff.SetActive(false);
-        }
-        else
-        {
-            GasOn.SetActive(false);
-            GasOff.SetActive(true);
-        }
+        float gravityY = characterController.isGrounded ? -0.5f : gravity.y - 5;
+        gravity = new(0, gravityY, 0);
 
-        characterController.Move(speed * Time.deltaTime * playerMove);
+        characterController.Move(Time.deltaTime * (playerMove + gravity));
     }
+
+    private void HandBrake()
+    {
+        //check if player is holding down space, make speed lerp to 0
+        //drifting?
+    }
+
     private void RotateWheels()
         {
             float moveInput = Input.GetAxis("Vertical");
 
             // Calculate rotation amount based on player's input
-            float rotationAmount = Input.GetAxis("Vertical") * Time.deltaTime * 100;
+            float rotationAmount = Input.GetAxis("Vertical") * Time.deltaTime * 500;
 
             if (moveInput > 0) // Player is moving forward
 
             // Rotate each wheel in the array
             foreach (GameObject wheel in wheels)
             {
-                wheel.transform.Rotate(Vector3.up * -rotationAmount);
+                wheel.transform.Rotate(Vector3.left * -rotationAmount);
             }
             else if (moveInput < 0)
              foreach (GameObject wheel in wheels)
             {
-                wheel.transform.Rotate(Vector3.down * rotationAmount);
+                wheel.transform.Rotate(Vector3.right * rotationAmount);
             }
-        }
     }
+}
