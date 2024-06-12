@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Brandon Scene.unity
+    guid: 92ba0b6c3681c44428b6d400f775bd4a
   m_configObjects: {}
