@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Justin Scene.unity
+    guid: aafbc04eb8f042843b89cf2e5909acb0
   m_configObjects: {}
